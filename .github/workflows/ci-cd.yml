@@ -1,0 +1,173 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - 'release-*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+env:
+  JAVA_VERSION: '17'
+  KOTLIN_VERSION: '1.9.20'
+
+jobs:
+  # Detect project type and configuration
+  detect-project:
+    name: Detect Project Configuration
+    runs-on: ubuntu-latest
+    outputs:
+      project_type: ${{ steps.detect.outputs.project_type }}
+      has_android: ${{ steps.detect.outputs.has_android }}
+      has_ios: ${{ steps.detect.outputs.has_ios }}
+      enable_firebase: ${{ steps.config.outputs.enable_firebase }}
+      enable_unit_tests: ${{ steps.config.outputs.enable_unit_tests }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect project type
+        id: detect
+        run: |
+          HAS_ANDROID=false
+          HAS_IOS=false
+          PROJECT_TYPE="unknown"
+
+          # Check for Android
+          if [ -d "composeApp" ] || [ -f "build.gradle.kts" ] || [ -f "build.gradle" ]; then
+            HAS_ANDROID=true
+            echo "✓ Android project detected"
+          fi
+
+          # Check for iOS
+          if [ -d "iosApp" ] || [ -f "iosApp/iosApp.xcodeproj/project.pbxproj" ]; then
+            HAS_IOS=true
+            echo "✓ iOS project detected"
+          fi
+
+          # Determine project type
+          if [ "$HAS_ANDROID" = true ] && [ "$HAS_IOS" = true ]; then
+            PROJECT_TYPE="multiplatform"
+            echo "📱 Project type: Kotlin Multiplatform (Android + iOS)"
+          elif [ "$HAS_ANDROID" = true ]; then
+            PROJECT_TYPE="android"
+            echo "🤖 Project type: Android"
+          elif [ "$HAS_IOS" = true ]; then
+            PROJECT_TYPE="ios"
+            echo "🍎 Project type: iOS"
+          else
+            PROJECT_TYPE="web"
+            echo "🌐 Project type: Web"
+          fi
+
+          echo "project_type=$PROJECT_TYPE" >> $GITHUB_OUTPUT
+          echo "has_android=$HAS_ANDROID" >> $GITHUB_OUTPUT
+          echo "has_ios=$HAS_IOS" >> $GITHUB_OUTPUT
+
+      - name: Read workflow configuration
+        id: config
+        run: |
+          # Default values
+          ENABLE_FIREBASE=false
+          ENABLE_UNIT_TESTS=true
+
+          # Read from workflow-config.json if exists
+          if [ -f ".github/workflow-config.json" ]; then
+            echo "📄 Reading configuration from workflow-config.json"
+
+            # Parse JSON (requires jq, fallback to grep if not available)
+            if command -v jq &> /dev/null; then
+              ENABLE_FIREBASE=$(jq -r '.enable_firebase_distribution // false' .github/workflow-config.json)
+              ENABLE_UNIT_TESTS=$(jq -r '.enable_unit_tests // true' .github/workflow-config.json)
+            else
+              # Fallback: simple grep-based parsing
+              if grep -q '"enable_firebase_distribution".*true' .github/workflow-config.json; then
+                ENABLE_FIREBASE=true
+              fi
+              if grep -q '"enable_unit_tests".*false' .github/workflow-config.json; then
+                ENABLE_UNIT_TESTS=false
+              fi
+            fi
+
+            echo "🔥 Firebase Distribution: $ENABLE_FIREBASE"
+            echo "🧪 Unit Tests: $ENABLE_UNIT_TESTS"
+          else
+            echo "⚠️  No workflow-config.json found, using defaults"
+          fi
+
+          echo "enable_firebase=$ENABLE_FIREBASE" >> $GITHUB_OUTPUT
+          echo "enable_unit_tests=$ENABLE_UNIT_TESTS" >> $GITHUB_OUTPUT
+
+  # Build Android if detected
+  build-android:
+    name: Build Android
+    needs: detect-project
+    if: needs.detect-project.outputs.has_android == 'true'
+    uses: ./.github/workflows/build-android.yml
+    with:
+      enable_firebase: ${{ needs.detect-project.outputs.enable_firebase == 'true' }}
+      enable_unit_tests: ${{ needs.detect-project.outputs.enable_unit_tests == 'true' }}
+    secrets: inherit
+
+  # Build iOS if detected
+  build-ios:
+    name: Build iOS
+    needs: detect-project
+    if: needs.detect-project.outputs.has_ios == 'true'
+    uses: ./.github/workflows/build-ios.yml
+    with:
+      enable_firebase: ${{ needs.detect-project.outputs.enable_firebase == 'true' }}
+      enable_unit_tests: ${{ needs.detect-project.outputs.enable_unit_tests == 'true' }}
+    secrets: inherit
+
+  # Summary job
+  build-summary:
+    name: Build Summary
+    runs-on: ubuntu-latest
+    needs: [detect-project, build-android, build-ios]
+    if: always()
+    steps:
+      - name: Check build results
+        run: |
+          echo "## 📊 Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Project Type:** ${{ needs.detect-project.outputs.project_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Android status
+          if [ "${{ needs.detect-project.outputs.has_android }}" = "true" ]; then
+            ANDROID_STATUS="${{ needs.build-android.result }}"
+            if [ "$ANDROID_STATUS" = "success" ]; then
+              echo "✅ Android Build: **Success**" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ Android Build: **Failed**" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+          # iOS status
+          if [ "${{ needs.detect-project.outputs.has_ios }}" = "true" ]; then
+            IOS_STATUS="${{ needs.build-ios.result }}"
+            if [ "$IOS_STATUS" = "success" ]; then
+              echo "✅ iOS Build: **Success**" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ iOS Build: **Failed**" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Configuration:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Firebase Distribution: ${{ needs.detect-project.outputs.enable_firebase }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit Tests: ${{ needs.detect-project.outputs.enable_unit_tests }}" >> $GITHUB_STEP_SUMMARY
