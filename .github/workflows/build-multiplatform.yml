@@ -66,7 +66,7 @@ jobs:
 
       - name: Upload Android APK
         if: matrix.platform == 'android'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: android-apks
           path: composeApp/build/outputs/apk/**/*.apk
@@ -140,7 +140,7 @@ jobs:
 
       - name: Upload iOS IPA
         if: matrix.platform == 'ios'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
           path: iosApp/build/ipa/*.ipa

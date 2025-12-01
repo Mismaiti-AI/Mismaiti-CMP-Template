@@ -142,7 +142,7 @@ jobs:
           fi
 
       - name: Upload IPA artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: steps.ipa_info.outputs.ipa_path != ''
         with:
           name: app-ios-debug
@@ -181,7 +181,7 @@ jobs:
 
       - name: Upload test results
         if: inputs.enable_unit_tests && always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ios-test-results
           path: iosApp/TestResults.xcresult
