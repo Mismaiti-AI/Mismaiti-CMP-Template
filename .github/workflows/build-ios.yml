@@ -13,6 +13,11 @@ on:
         required: false
         type: boolean
         default: true
+      tester_groups:
+        description: 'Firebase App Distribution tester groups (comma-separated)'
+        required: false
+        type: string
+        default: 'testers'
     secrets:
       FIREBASE_TOKEN:
         required: false
@@ -155,7 +160,7 @@ jobs:
         with:
           appId: ${{ secrets.FIREBASE_APP_ID_IOS }}
           token: ${{ secrets.FIREBASE_TOKEN }}
-          groups: testers
+          groups: ${{ inputs.tester_groups }}
           file: ${{ steps.ipa_info.outputs.ipa_path }}
           releaseNotes: |
             Build from commit: ${{ github.sha }}
