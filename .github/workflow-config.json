@@ -16,10 +16,8 @@
     "enable_e2e_tests": false
   },
   "firebase": {
-    "enable_firebase_distribution": false,
-    "firebase_app_id_android": "",
-    "firebase_app_id_ios": "",
-    "tester_groups": ["testers"]
+    "enable_firebase_distribution": true,
+    "enable_unit_tests": false
   },
   "build": {
     "environments": ["dev"],
