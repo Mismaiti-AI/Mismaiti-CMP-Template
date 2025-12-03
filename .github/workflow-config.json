@@ -17,7 +17,8 @@
   },
   "firebase": {
     "enable_firebase_distribution": true,
-    "enable_unit_tests": false
+    "enable_unit_tests": false,
+    "tester_groups": ["group1"]
   },
   "build": {
     "environments": ["dev"],
