@@ -1,7 +1,5 @@
 package com.mismaiti
 
-import mismaiti_template.composeapp.generated.resources.Res
-
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -21,9 +19,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import mismaiti_template.composeapp.generated.resources.montserrat_bold
-import mismaiti_template.composeapp.generated.resources.montserrat_medium
-import mismaiti_template.composeapp.generated.resources.montserrat_regular
 import org.jetbrains.compose.resources.Font
 
 private val LightColorScheme = lightColorScheme(
