@@ -121,3 +121,9 @@ dependencies {
 room {
     schemaDirectory("$projectDir/schemas")
 }
+
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "com.mismaiti"
+    generateResClass = always
+}
