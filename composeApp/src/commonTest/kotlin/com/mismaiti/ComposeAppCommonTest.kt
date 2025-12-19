@@ -1,4 +1,4 @@
-package org.mismaiti
+package com.mismaiti
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

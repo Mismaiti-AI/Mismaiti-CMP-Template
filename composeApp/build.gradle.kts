@@ -85,11 +85,11 @@ kotlin {
 }
 
 android {
-    namespace = "org.mismaiti"
+    namespace = "com.mismaiti"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "org.mismaiti"
+        applicationId = "com.mismaiti"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
