@@ -1,8 +1,9 @@
 name: CI/CD Pipeline
 
 on:
-  # NOTE: Push to release-* is handled by build-on-push.yml (simpler, for code generation flow)
-  # This workflow handles PRs and manual triggers for full CI/CD pipeline
+  push:
+    branches:
+      - 'release-*'  # Triggers on push to release branches
   pull_request:
     branches:
       - main
