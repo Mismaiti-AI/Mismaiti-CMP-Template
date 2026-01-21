@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Workflow configuration for CI/CD pipeline. This file is automatically updated by Mismaiti GitHub App based on project context.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "project_type": "multiplatform",
   "platforms": {
     "android": {
@@ -16,9 +16,9 @@
     "enable_e2e_tests": false
   },
   "firebase": {
-    "enable_firebase_distribution": true,
-    "enable_unit_tests": false,
-    "tester_groups": ["group1"]
+    "enable_firebase_distribution": false,
+    "tester_groups": ["testers"],
+    "_note": "Firebase App Distribution is handled by Mismaiti backend after build completes"
   },
   "build": {
     "environments": ["dev"],

@@ -81,6 +81,13 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+
+        // Global opt-in for experimental APIs to avoid annotation errors
+        all {
+            languageSettings.optIn("kotlin.time.ExperimentalTime")
+            languageSettings.optIn("androidx.compose.material3.ExperimentalMaterial3Api")
+            languageSettings.optIn("androidx.compose.foundation.ExperimentalFoundationApi")
+        }
     }
 }
 
