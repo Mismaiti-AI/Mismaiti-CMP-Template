@@ -51,7 +51,7 @@ kotlin {
         androidMain {
             dependsOn(mobileMain)
             dependencies {
-                implementation(compose.preview)
+                implementation("org.jetbrains.compose.ui:ui-tooling-preview:1.10.0")
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.ktor.client.okhttp)
                 implementation(libs.androidx.room.sqlite.wrapper)
@@ -76,13 +76,13 @@ kotlin {
 
         commonMain.dependencies {
             // Compose core - works on all platforms including wasmJs
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.materialIconsExtended)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
+            implementation(libs.runtime)
+            implementation(libs.foundation)
+            implementation(libs.material3)
+            implementation(libs.material.icons.extended)
+            implementation(libs.ui)
+            implementation(libs.components.resources)
+            implementation(libs.org.jetbrains.compose.ui.ui.tooling.preview)
 
             // Core multiplatform libraries
             implementation(libs.kermit)
@@ -168,7 +168,7 @@ android {
 }
 
 dependencies {
-    debugImplementation(compose.uiTooling)
+    debugImplementation(libs.ui.tooling)
     add("kspAndroid", libs.androidx.room.compiler)
     add("kspIosSimulatorArm64", libs.androidx.room.compiler)
     add("kspIosArm64", libs.androidx.room.compiler)
