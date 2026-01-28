@@ -1,6 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -29,104 +28,56 @@ kotlin {
         }
     }
 
-    // WASM target for web preview
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser {
-            commonWebpackConfig {
-                outputFileName = "composeApp.js"
-            }
-        }
-        binaries.executable()
-    }
-
-    // Create intermediate source set for mobile platforms (Android + iOS)
-    // This allows Room to be shared between Android/iOS but not wasmJs
     sourceSets {
-        // Mobile-only source set (Android + iOS shared code with Room)
-        val mobileMain by creating {
-            dependsOn(commonMain.get())
+        androidMain.dependencies {
+            implementation(compose.preview)
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.ktor.client.okhttp)
+            implementation(libs.androidx.room.sqlite.wrapper)
+
+            implementation(libs.koin.androidx.compose)
         }
 
-        androidMain {
-            dependsOn(mobileMain)
-            dependencies {
-                implementation("org.jetbrains.compose.ui:ui-tooling-preview:1.10.0")
-                implementation(libs.androidx.activity.compose)
-                implementation(libs.ktor.client.okhttp)
-                implementation(libs.androidx.room.sqlite.wrapper)
-
-                implementation(libs.koin.androidx.compose)
-            }
-        }
-
-        iosMain {
-            dependsOn(mobileMain)
-            dependencies {
-                implementation(libs.ktor.client.darwin)
-            }
-        }
-
-        // wasmJs source set - NO Room, uses mock data for preview
-        val wasmJsMain by getting {
-            dependencies {
-                implementation(libs.ktor.client.js)
-            }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
 
         commonMain.dependencies {
-            // Compose core - works on all platforms including wasmJs
-            implementation(libs.runtime)
-            implementation(libs.foundation)
-            implementation(libs.material3)
-            implementation(libs.material.icons.extended)
-            implementation(libs.ui)
-            implementation(libs.components.resources)
-            implementation(libs.org.jetbrains.compose.ui.ui.tooling.preview)
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation(compose.material3)
+            implementation(compose.materialIconsExtended)
+            implementation(compose.ui)
+            implementation(compose.components.resources)
+            implementation(compose.components.uiToolingPreview)
+            implementation(libs.androidx.lifecycle.viewmodelCompose)
+            implementation(libs.androidx.lifecycle.runtimeCompose)
 
-            // Core multiplatform libraries
             implementation(libs.kermit)
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kotlinx.serialization.json)
-            implementation(libs.kotlinx.datetime)
-
-            // Ktor - core only, engines are platform-specific
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.client.serialization)
             implementation(libs.ktor.serialization.json)
             implementation(libs.ktor.client.logging)
-
-            // Koin core DI
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
-        }
-
-        // Mobile-only dependencies (Android + iOS) - NOT wasmJs
-        // These have savedstate/lifecycle dependencies that don't support wasmJs
-        mobileMain.dependencies {
-            // Lifecycle & ViewModel
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
-            implementation(libs.androidx.lifecycle.runtimeCompose)
-
-            // Navigation
             implementation(libs.androidx.navigation.compose)
+            implementation(libs.kotlinx.serialization.json)
 
-            // Koin ViewModel support
-            implementation(libs.koin.compose.viewmodel)
-
-            // Coil image loading
             implementation(libs.coil)
             implementation(libs.coil.network.ktor)
             implementation(libs.coil.compose)
             implementation(libs.coil.mp)
             implementation(libs.coil.gif)
 
-            // Room database
+            implementation(libs.kotlinx.datetime)
+
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
-        }
 
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+        }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
@@ -168,7 +119,7 @@ android {
 }
 
 dependencies {
-    debugImplementation(libs.ui.tooling)
+    debugImplementation(compose.uiTooling)
     add("kspAndroid", libs.androidx.room.compiler)
     add("kspIosSimulatorArm64", libs.androidx.room.compiler)
     add("kspIosArm64", libs.androidx.room.compiler)
